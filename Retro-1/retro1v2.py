@@ -1,8 +1,10 @@
+#red neuronal por Alan Rodrigo Vega Reza
+
 import pandas as pd
 import numpy as np
 import os
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -39,7 +41,6 @@ class NeuralNetwork:
         self.weights = []
         self.biases = []
 
-        # Inicialización de pesos y sesgos con He
         for i in range(self.num_layers):
             limit = np.sqrt(2 / layer_sizes[i])
             self.weights.append(np.random.uniform(-limit, limit, (layer_sizes[i], layer_sizes[i + 1])))
@@ -112,18 +113,31 @@ if __name__ == "__main__":
 
     
     y_pred = predictions * (y_max - y_min) + y_min
+    y_test_norm = y_test * (y_max - y_min) + y_min
 
-    y_pred_classes = (predictions > 0.5).astype(int)
-    y_test_classes = (y_test > 0.5).astype(int)
+    tolerance = 5
 
+    y_pred_classes = (np.abs(y_pred - y_test_norm) <= tolerance).astype(int)
+    y_test_classes = np.ones_like(y_pred_classes)  
+
+    
     cm = confusion_matrix(y_test_classes, y_pred_classes)
 
-    sns.heatmap(cm, annot=True, fmt = "d", cmap = "magma", xticklabels = ['Failed', 'Passed'], yticklabels=['Failed', 'Passed'])
-    plt.title("Confusion Matrix")
+    
+    sns.heatmap(cm, annot=True, fmt="d", cmap="magma", xticklabels=['Incorrect', 'Correct'], yticklabels=['Incorrect', 'Correct'])
+    plt.title("Confusion Matrix (Regresión)")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
     plt.show()
     
-    y_test_norm = y_test*(y_max - y_min) + y_min
-    
-    #y_test * (y_max - y_min) + y_min - y_pred
     mse = np.mean(np.square(y_test_norm - y_pred))
+    precision = precision_score(y_test_classes, y_pred_classes)
+    recall = recall_score(y_test_classes, y_pred_classes)
+    f1 = f1_score(y_test_classes, y_pred_classes)
+
+    print("\nMétricas de clasificación:")
+    print(f"Precision: {precision:.2f}")
+    print(f"Recall: {recall:.2f}")
+    print(f"F1-Score: {f1:.2f}")
     print(f"Mean Squared Error (MSE) en el conjunto de prueba: {mse:.2f}")
+    
